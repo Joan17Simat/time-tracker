@@ -2,7 +2,13 @@
   <div class="relative">
     <div class="downdrop-btn" @click="showFirstMenu = !showFirstMenu">
       <p>Joan Alimnyana</p>
-      <img src="@/assets/icons/down-arrow.png" width="10" height="10" />
+      <img
+        src="@/assets/icons/down-arrow.png"
+        width="10"
+        height="10"
+        class="icon-dropdown"
+        :class="{ 'icon-dropdown--active': showFirstMenu }"
+      />
     </div>
     <div
       v-if="showFirstMenu"
@@ -13,13 +19,16 @@
           v-for="(item, index) in optionsMenu"
           :key="`${item.title}-${index}`"
           class="p-5 cursor-pointer hover:bg-green-200"
+          @mouseover="setHoverItem(item)"
           :class="{ 'border-b-2': index !== optionsMenu.length - 1 }"
         >
           <div class="item-menu">
             <img
               @mouseover="itemsSubMenu = item.childrens"
-              @mouseleave="itemsSubMenu = undefined"
-              :class="{ 'hidde-icon-left': !item.childrens }"
+              :class="{
+                'hidde-icon-left': !item.childrens,
+                'rotate-icon-arrow': item.title === activeHoverMenuItem,
+              }"
               src="@/assets/icons/down-arrow.png"
               width="10"
               height="10"
@@ -30,7 +39,8 @@
       </ul>
     </div>
     <div
-      v-if="itemsSubMenu"
+      v-if="showFirstMenu && itemsSubMenu"
+      @mouseleave="itemsSubMenu = undefined"
       class="second-menu shadow-xl border rounded-2xl overflow-hidden"
     >
       <ul>
@@ -67,6 +77,7 @@ export default {
   setup() {
     let showFirstMenu = ref(false);
     let itemsSubMenu = ref(undefined);
+    let activeHoverMenuItem = ref(undefined);
     let optionsMenu = ref([
       {
         title: "Mis cuentas",
@@ -87,6 +98,20 @@ export default {
       },
       {
         title: "Vista empleado",
+        childrens: [
+          {
+            title: "Sesame 3",
+            textIcon: "S3",
+            name: "Joan Alminyana",
+            time: "00:00",
+          },
+          {
+            title: "Sesame 2",
+            textIcon: "S2",
+            name: "Joan Alminyana",
+            time: "00:00",
+          },
+        ],
       },
       {
         title: "Mi perfil",
@@ -95,7 +120,21 @@ export default {
         title: "Cerrar sesión",
       },
     ]);
-    return { showFirstMenu, itemsSubMenu, optionsMenu };
+
+    const setHoverItem = (item) => {
+      itemsSubMenu.value = item.childrens;
+      if (activeHoverMenuItem.value !== item.title) {
+        itemsSubMenu.value = item.childrens;
+      }
+      activeHoverMenuItem.value = item.title;
+    };
+    return {
+      showFirstMenu,
+      itemsSubMenu,
+      activeHoverMenuItem,
+      optionsMenu,
+      setHoverItem,
+    };
   },
 };
 </script>
@@ -104,11 +143,22 @@ export default {
 .downdrop-btn {
   display: grid;
   cursor: pointer;
-  grid-template-columns: auto auto;
+  grid-template-columns: max-content max-content;
   align-items: center;
+  justify-content: center;
+  column-gap: 10px;
   p {
     user-select: none;
     font-weight: bolder;
+  }
+  .icon-dropdown {
+    transition: transform 0.5s;
+    transform: rotate(0deg);
+    &--active {
+      transition: transform 0.5s;
+
+      transform: rotate(180deg);
+    }
   }
 }
 .first-menu {
@@ -120,7 +170,16 @@ export default {
     display: grid;
     align-items: center;
     grid-template-columns: max-content auto;
+    img {
+      transition: transform 0.5s;
+      transform: rotate(0deg);
+    }
 
+    .rotate-icon-arrow {
+      transition: transform 0.5s;
+
+      transform: rotate(90deg);
+    }
     .hidde-icon-left {
       visibility: hidden;
     }

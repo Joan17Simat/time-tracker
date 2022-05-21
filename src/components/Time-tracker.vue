@@ -35,7 +35,6 @@ export default {
   width: 30vw;
   height: 55px;
   margin: 0 auto;
-
   column-gap: 10px;
   > div {
     display: grid;
@@ -54,7 +53,6 @@ export default {
   > :last-child {
     display: grid;
     grid-template-columns: min-content 1fr;
-    column-gap: 10px;
   }
 
   .avatar {
