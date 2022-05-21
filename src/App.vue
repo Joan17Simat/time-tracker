@@ -1,15 +1,13 @@
 <template>
-  <img alt="Vue logo" src="./assets/logo.png" />
-  <HelloWorld msg="Welcome to Your Vue.js App" />
+  <TimeTracker />
 </template>
 
 <script>
-import HelloWorld from "./components/HelloWorld.vue";
-
+import TimeTracker from "./components/Time-tracker.vue";
 export default {
   name: "App",
   components: {
-    HelloWorld,
+    TimeTracker,
   },
 };
 </script>
