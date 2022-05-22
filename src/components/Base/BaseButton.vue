@@ -1,6 +1,7 @@
 <template>
   <button
-    class="w-full bg-blue-500 hover:bg-blue-700 text-sm text-white font-bold py-2 px-4 rounded-full"
+    class="w-full text-sm text-white font-bold py-2 px-4 rounded-full"
+    @click="clickBtn"
   >
     {{ title }}
   </button>
@@ -10,11 +11,28 @@
 export default {
   props: {
     title: String,
+    bgColor: String,
   },
-  setup() {
-    return {};
+  emits: ["click"],
+  setup(props, { emit }) {
+    const clickBtn = () => {
+      emit("click");
+    };
+    return { clickBtn };
   },
 };
 </script>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+button {
+  width: 150px;
+  background-color: v-bind(bgColor);
+  transition: transform 0.5s;
+  transform: scale(1);
+
+  &:hover {
+    transform: scale(1.02);
+    transition: transform 0.5s;
+  }
+}
+</style>
