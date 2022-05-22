@@ -19,8 +19,9 @@
           v-for="(item, index) in optionsMenu"
           :key="`${item.title}-${index}`"
           class="p-5 cursor-pointer hover:bg-green-200"
-          @mouseover="setHoverItem(item)"
           :class="{ 'border-b-2': index !== optionsMenu.length - 1 }"
+          @mouseover="setHoverItem(item)"
+          @click="closeFirstMenu(item)"
         >
           <div class="item-menu">
             <img
@@ -49,6 +50,7 @@
           :key="`${item.title}-${index}`"
           class="p-4 cursor-pointer hover:bg-green-200"
           :class="{ 'border-b-2': index !== optionsMenu.length - 1 }"
+          @click="closeMenus"
         >
           <div class="item-menu">
             <div
@@ -74,6 +76,7 @@
 
 <script>
 import { menuOptions } from "@/utils/menuOptions";
+
 export default {
   setup() {
     let showFirstMenu = ref(false);
@@ -82,11 +85,22 @@ export default {
     let optionsMenu = ref(menuOptions);
 
     const setHoverItem = (item) => {
+      //Change the active item to close the menus
       itemsSubMenu.value = item.childrens;
       if (activeHoverMenuItem.value !== item.title) {
         itemsSubMenu.value = item.childrens;
       }
       activeHoverMenuItem.value = item.title;
+    };
+
+    const closeMenus = () => {
+      showFirstMenu.value = false;
+      itemsSubMenu.value = undefined;
+    };
+    const closeFirstMenu = (item) => {
+      if (!item.childrens) {
+        showFirstMenu.value = false;
+      }
     };
     return {
       showFirstMenu,
@@ -94,6 +108,8 @@ export default {
       activeHoverMenuItem,
       optionsMenu,
       setHoverItem,
+      closeMenus,
+      closeFirstMenu,
     };
   },
 };

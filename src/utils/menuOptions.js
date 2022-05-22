@@ -26,8 +26,8 @@ export const menuOptions = [
           time: "00:00",
         },
         {
-          title: "Sesame 2",
-          textIcon: "S2",
+          title: "Sesame 4",
+          textIcon: "S4",
           name: "Joan Alminyana",
           time: "00:00",
         },
