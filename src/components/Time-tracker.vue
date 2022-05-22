@@ -49,16 +49,22 @@ import BaseButton from "./Base/BaseButton.vue";
 import BaseDownDropButton from "./Base/BaseDownDropButton.vue";
 import { getWorkerStatus, clockOut, clockIn } from "@/utils/api.js";
 import moment from "moment-timezone";
+
 export default {
-  components: { BaseButton, BaseDownDropButton },
+  components: {
+    BaseButton,
+    BaseDownDropButton,
+  },
+
   setup() {
     let dataEmployee = ref(undefined);
-    let workEntry = ref({
-      coordinates: {
-        latitude: 0,
-        longitude: 0,
-      },
-    });
+    let currentTimeOnline = ref(moment("00:00:00", "HH:mm:ss").format("HH:mm:ss"));
+    let lastDurationClockIn = ref(moment("00:00:00", "HH:mm:ss").format("HH:mm:ss"));
+    let totalTimeClockIn = ref(moment("00:00:00", "HH:mm:ss").format("HH:mm:ss"));
+    let intervalCurrentTime = ref(undefined);
+    let intervalTotalTime = ref(undefined);
+    let isPausedCurrentTime = ref(false);
+
     let colorStatusEmployee = computed(() => {
       if (isPausedCurrentTime.value) {
         return "gray";
@@ -69,48 +75,56 @@ export default {
     let isEmployeeOnline = computed(() => {
       return dataEmployee.value.employee.workStatus === "online";
     });
-    let currentTimeOnline = ref(moment("00:00:00", "HH:mm:ss").format("HH:mm:ss"));
-    let lastDurationClockIn = ref(moment("00:00:00", "HH:mm:ss").format("HH:mm:ss"));
-    let totalTimeClockIn = ref(moment("00:00:00", "HH:mm:ss").format("HH:mm:ss"));
-    let intervalCurrentTime = ref(undefined);
-    let intervalTotalTime = ref(undefined);
 
-    let isPausedCurrentTime = ref(false);
     onBeforeMount(() => {
+      //Get data of employee
       getWorkerStatus().then(({ data }) => {
         dataEmployee.value = data.data[0];
+        if (isEmployeeOnline.value) {
+          activeIntervals();
+        }
       });
     });
+    const activeIntervals = () => {
+      let dateWorkEntryIn = moment(dataEmployee.value.workEntryIn.date).format(
+        "DD/MM/YYYY HH:mm:ss"
+      );
+      //Activate counter total time
+      intervalTotalTime.value = setInterval(() => {
+        totalTimeClockIn.value = moment
+          .utc(moment().diff(moment(dateWorkEntryIn, "DD/MM/YYYY HH:mm:ss")))
+          .format("HH:mm:ss");
+      }, 1000);
+
+      //Activate counter current time
+      intervalCurrentTime.value = setInterval(() => {
+        currentTimeOnline.value = moment(currentTimeOnline.value, "HH:mm:ss")
+          .add(1, "seconds")
+          .format("HH:mm:ss");
+      }, 1000);
+    };
+
     const clockInEmployee = () => {
-      clockIn(dataEmployee.value.employee.id, workEntry.value).then(({ data }) => {
+      clockIn(dataEmployee.value.employee.id).then(({ data }) => {
         dataEmployee.value = data.data;
 
-        let dateWorkEntryIn = moment(dataEmployee.value.workEntryIn.date).format(
-          "DD/MM/YYYY HH:mm:ss"
-        );
-        intervalTotalTime.value = setInterval(() => {
-          totalTimeClockIn.value = moment
-            .utc(moment().diff(moment(dateWorkEntryIn, "DD/MM/YYYY HH:mm:ss")))
-            .format("HH:mm:ss");
-        }, 1000);
-
-        intervalCurrentTime.value = setInterval(() => {
-          currentTimeOnline.value = moment(currentTimeOnline.value, "HH:mm:ss")
-            .add(1, "seconds")
-            .format("HH:mm:ss");
-        }, 1000);
+        activeIntervals();
       });
     };
+
     const clockOutEmployee = () => {
+      //Reset variables to initial state
       clearInterval(intervalTotalTime.value);
       clearInterval(intervalCurrentTime.value);
       lastDurationClockIn.value = currentTimeOnline.value;
       isPausedCurrentTime.value = false;
+
+      //set timeout to wait for the animation finish
       setTimeout(() => {
         totalTimeClockIn.value = moment("00:00:00", "HH:mm:ss").format("HH:mm:ss");
         currentTimeOnline.value = moment("00:00:00", "HH:mm:ss").format("HH:mm:ss");
       }, 300);
-      clockOut(dataEmployee.value.employee.id, workEntry.value).then(({ data }) => {
+      clockOut(dataEmployee.value.employee.id).then(({ data }) => {
         dataEmployee.value = data.data;
       });
     };
@@ -174,7 +188,7 @@ export default {
   }
   > :first-child {
     display: grid;
-    grid-template-columns: auto 1fr;
+    grid-template-columns: 150px 1fr;
     column-gap: 10px;
   }
   > :last-child {

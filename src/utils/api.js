@@ -44,7 +44,6 @@ export function getWorkerStatus() {
 /**
  * Clock in at work
  * @param {String} employeeId Id of actual employee
- * @param {Object} workEntryIn Data coordinates
  * 
  */
 export function clockIn(employeeId) {
@@ -54,7 +53,6 @@ export function clockIn(employeeId) {
 /**
  * Clock out at work
  * @param {String} employeeId Id of actual employee
- * @param {Object} workEntryOut Data coordinates
  */
  export function clockOut(employeeId) {
   return post("work-entries/clock-out", { employeeId });
