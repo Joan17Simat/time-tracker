@@ -7,13 +7,21 @@
     }"
   >
     <div>
-      <div>04:01:56 / 04:01:56</div>
+      <div v-if="isEmployeeOnline">
+        {{ currentTimeOnline }}
+        <span class="text-sm text-gray-600">/ {{ totalTimeClockIn }}</span>
+      </div>
+      <div v-else>{{ lastDurationClockIn }}</div>
       <div class="btn-wrapper">
         <div v-if="!isEmployeeOnline">
           <BaseButton title="Entrar" bgColor="#5EBDA2" @click="clockInEmployee" />
         </div>
         <div v-else>
-          <BaseButton title="Pausar" bgColor="#B5B5B5" @click="clockInEmployee" />
+          <BaseButton
+            :title="isPausedCurrentTime ? 'Seguir' : 'Pausar'"
+            :bgColor="isPausedCurrentTime ? '#7BCCEF' : '#B5B5B5'"
+            @click="pauseContinueCronoCurrentTime"
+          />
         </div>
         <div class="hidden-btn" :class="{ 'hidden-btn--show': isEmployeeOnline }">
           <BaseButton title="Salir" bgColor="#FF9984" @click="clockOutEmployee" />
@@ -22,10 +30,14 @@
     </div>
 
     <div class="separator rounded-full" />
-    <div class="">
+    <div>
       <div class="avatar relative">
-        <img class="w-10 h-10 rounded-full" src="@/assets/images/avatar.png" alt="" />
-        <span class="top-0 absolute bg-green-400 rounded-full"></span>
+        <img
+          class="w-10 h-10 rounded-full"
+          src="@/assets/images/avatar.png"
+          alt="avatar"
+        />
+        <span :class="`top-0 absolute bg-${colorStatusEmployee}-400 rounded-full`"></span>
       </div>
       <BaseDownDropButton />
     </div>
@@ -36,6 +48,7 @@
 import BaseButton from "./Base/BaseButton.vue";
 import BaseDownDropButton from "./Base/BaseDownDropButton.vue";
 import { getWorkerStatus, clockOut, clockIn } from "@/utils/api.js";
+import moment from "moment-timezone";
 export default {
   components: { BaseButton, BaseDownDropButton },
   setup() {
@@ -46,35 +59,87 @@ export default {
         longitude: 0,
       },
     });
-    let currentTimeOnline = ref(undefined);
-    let totalTimeClockIn = ref(undefined);
+    let colorStatusEmployee = computed(() => {
+      if (isPausedCurrentTime.value) {
+        return "gray";
+      } else {
+        return dataEmployee.value.employee.workStatus === "online" ? "green" : "red";
+      }
+    });
     let isEmployeeOnline = computed(() => {
       return dataEmployee.value.employee.workStatus === "online";
     });
+    let currentTimeOnline = ref(moment("00:00:00", "HH:mm:ss").format("HH:mm:ss"));
+    let lastDurationClockIn = ref(moment("00:00:00", "HH:mm:ss").format("HH:mm:ss"));
+    let totalTimeClockIn = ref(moment("00:00:00", "HH:mm:ss").format("HH:mm:ss"));
+    let intervalCurrentTime = ref(undefined);
+    let intervalTotalTime = ref(undefined);
+
+    let isPausedCurrentTime = ref(false);
     onBeforeMount(() => {
       getWorkerStatus().then(({ data }) => {
         dataEmployee.value = data.data[0];
       });
     });
     const clockInEmployee = () => {
-      console.log(dataEmployee.value);
       clockIn(dataEmployee.value.employee.id, workEntry.value).then(({ data }) => {
         dataEmployee.value = data.data;
+
+        let dateWorkEntryIn = moment(dataEmployee.value.workEntryIn.date).format(
+          "DD/MM/YYYY HH:mm:ss"
+        );
+        intervalTotalTime.value = setInterval(() => {
+          totalTimeClockIn.value = moment
+            .utc(moment().diff(moment(dateWorkEntryIn, "DD/MM/YYYY HH:mm:ss")))
+            .format("HH:mm:ss");
+        }, 1000);
+
+        intervalCurrentTime.value = setInterval(() => {
+          currentTimeOnline.value = moment(currentTimeOnline.value, "HH:mm:ss")
+            .add(1, "seconds")
+            .format("HH:mm:ss");
+        }, 1000);
       });
     };
     const clockOutEmployee = () => {
+      clearInterval(intervalTotalTime.value);
+      clearInterval(intervalCurrentTime.value);
+      lastDurationClockIn.value = currentTimeOnline.value;
+      isPausedCurrentTime.value = false;
+      setTimeout(() => {
+        totalTimeClockIn.value = moment("00:00:00", "HH:mm:ss").format("HH:mm:ss");
+        currentTimeOnline.value = moment("00:00:00", "HH:mm:ss").format("HH:mm:ss");
+      }, 300);
       clockOut(dataEmployee.value.employee.id, workEntry.value).then(({ data }) => {
         dataEmployee.value = data.data;
-        console.log(data);
       });
     };
+
+    const pauseContinueCronoCurrentTime = () => {
+      isPausedCurrentTime.value = !isPausedCurrentTime.value;
+
+      if (isPausedCurrentTime.value) {
+        clearInterval(intervalCurrentTime.value);
+      } else {
+        intervalCurrentTime.value = setInterval(() => {
+          currentTimeOnline.value = moment(currentTimeOnline.value, "HH:mm:ss")
+            .add(1, "seconds")
+            .format("HH:mm:ss");
+        }, 1000);
+      }
+    };
+
     return {
       dataEmployee,
       isEmployeeOnline,
       currentTimeOnline,
+      lastDurationClockIn,
       totalTimeClockIn,
+      colorStatusEmployee,
+      isPausedCurrentTime,
       clockInEmployee,
       clockOutEmployee,
+      pauseContinueCronoCurrentTime,
     };
   },
 };
@@ -91,7 +156,7 @@ export default {
   margin: 0 auto;
   column-gap: 10px;
   transition: all 0.5s;
-  padding: 10px;
+  padding: 0 10px;
   &--big {
     transition: all 0.5s;
 

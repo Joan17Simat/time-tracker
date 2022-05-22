@@ -73,53 +73,13 @@
 </template>
 
 <script>
+import { menuOptions } from "@/utils/menuOptions";
 export default {
   setup() {
     let showFirstMenu = ref(false);
     let itemsSubMenu = ref(undefined);
     let activeHoverMenuItem = ref(undefined);
-    let optionsMenu = ref([
-      {
-        title: "Mis cuentas",
-        childrens: [
-          {
-            title: "Sesame 1",
-            textIcon: "S1",
-            name: "Joan Alminyana",
-            time: "00:00",
-          },
-          {
-            title: "Sesame 2",
-            textIcon: "S2",
-            name: "Joan Alminyana",
-            time: "00:00",
-          },
-        ],
-      },
-      {
-        title: "Vista empleado",
-        childrens: [
-          {
-            title: "Sesame 3",
-            textIcon: "S3",
-            name: "Joan Alminyana",
-            time: "00:00",
-          },
-          {
-            title: "Sesame 2",
-            textIcon: "S2",
-            name: "Joan Alminyana",
-            time: "00:00",
-          },
-        ],
-      },
-      {
-        title: "Mi perfil",
-      },
-      {
-        title: "Cerrar sesión",
-      },
-    ]);
+    let optionsMenu = ref(menuOptions);
 
     const setHoverItem = (item) => {
       itemsSubMenu.value = item.childrens;
