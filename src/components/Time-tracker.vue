@@ -39,7 +39,21 @@
         />
         <span :class="`top-0 absolute bg-${colorStatusEmployee}-400 rounded-full`"></span>
       </div>
-      <BaseDownDropButton />
+      <BaseDownDropButton :showFirstMenu="showFirstMenu">
+        <template #btn-drop-down="{ showFirstMenu }">
+          <p>Joan Alimnyana</p>
+          <img
+            src="@/assets/icons/down-arrow.png"
+            width="10"
+            height="10"
+            class="icon-dropdown"
+            :class="{ 'icon-dropdown--active': showFirstMenu }"
+          />
+        </template>
+        <template #menu-drop="{ showFirstMenu }">
+          <MenuDropDown :showFirstMenu="showFirstMenu" />
+        </template>
+      </BaseDownDropButton>
     </div>
   </div>
 </template>
@@ -49,15 +63,18 @@ import BaseButton from "./Base/BaseButton.vue";
 import BaseDownDropButton from "./Base/BaseDownDropButton.vue";
 import { getWorkerStatus, clockOut, clockIn } from "@/utils/api.js";
 import moment from "moment-timezone";
+import MenuDropDown from "./MenuDropDown.vue";
 
 export default {
   components: {
     BaseButton,
     BaseDownDropButton,
+    MenuDropDown,
   },
 
   setup() {
     let dataEmployee = ref(undefined);
+    let showFirstMenu = ref(false);
     let currentTimeOnline = ref(moment("00:00:00", "HH:mm:ss").format("HH:mm:ss"));
     let lastDurationClockIn = ref(moment("00:00:00", "HH:mm:ss").format("HH:mm:ss"));
     let totalTimeClockIn = ref(moment("00:00:00", "HH:mm:ss").format("HH:mm:ss"));
@@ -145,6 +162,7 @@ export default {
 
     return {
       dataEmployee,
+      showFirstMenu,
       isEmployeeOnline,
       currentTimeOnline,
       lastDurationClockIn,
@@ -227,6 +245,16 @@ export default {
   > div:last-child {
     display: grid;
     grid-template-columns: 1fr 1fr !important;
+  }
+}
+
+.icon-dropdown {
+  transition: transform 0.5s;
+  transform: rotate(0deg);
+  &--active {
+    transition: transform 0.5s;
+
+    transform: rotate(180deg);
   }
 }
 </style>
